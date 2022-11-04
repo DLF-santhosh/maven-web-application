@@ -1,0 +1,39 @@
+pipeline{
+    agent any
+    tools{
+        maven "apache-maven-3.8.6"
+    }
+  
+   
+  stages{
+        //get the code from git hub
+        stage('checkout code'){
+            steps{
+                git credentialsId: '1d47a6dd-ba85-4c69-97cb-fe84764dc6d4', url: 'https://github.com/DLF-santhosh/maven-web-application.git'
+            }
+            }
+              //build the maven
+            stage('Build'){
+                steps{
+                sh "mvn clean package"
+                }
+            }
+            
+            //excute sonarqube
+            stage('execute sonarqube'){
+                steps{
+                    sh "mvn sonar:sonar"
+                }
+            }
+            
+            //deploy the tomcat
+            stage ('deploy tomcat'){
+            steps{
+                sshagent(['59ac3140-b0bc-49b5-801d-635f31ddfca8']) {
+                    sh "scp -o StrictHostkeychecking=no target/maven-web-application.war ec2-user@172.31.45.109:/opt/apache-tomcat-9.0.68/webapps"
+                }
+            }
+            }
+        
+    }
+}
